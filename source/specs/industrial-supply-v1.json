@@ -1,0 +1,319 @@
+{
+	"Name": "industrial-supply-v1",
+	"GlobalSeed": "industrial-supply-v1",
+	"Description": "Industrial-supply demo dataset spanning Identity, Catalog, Inventory, Sales, and Manufacturing domains. ~46K records across 14 tables — substantial enough for the typed-op pipeline to do meaningful Aggregations, Histograms, and Intersections, small enough to run in seconds. Fault-injection (~5% nullable emails / phones, ~1% orphan FKs, ~5% zero-quantity inventory) is sprinkled in so consumers can verify their pipelines handle dirty data.",
+
+	"Entities":
+	[
+		{
+			"Entity": "Company",
+			"Count": 50,
+			"Description": "Top-level supplier / manufacturer entities. Parent of departments, products, materials, warehouses.",
+			"Fields":
+			[
+				{ "Column": "IDCompany",     "Expression": "RecordIndex + 1" },
+				{ "Column": "GUIDCompany",   "Expression": "synth_guid()" },
+				{ "Column": "Name",          "Expression": "synth_company()" },
+				{ "Column": "Industry",      "Expression": "synth_pickWeighted(\"Manufacturing|Distribution|Services|Retail|Wholesale\", \"40|25|15|10|10\")" },
+				{ "Column": "EmployeeCount", "Expression": "synth_integer(25, 8000)" },
+				{ "Column": "AnnualRevenue", "Expression": "synth_integer(500000, 500000000)" },
+				{ "Column": "City",          "Expression": "synth_city()" },
+				{ "Column": "StateCode",     "Expression": "synth_stateCode()" },
+				{ "Column": "PostalCode",    "Expression": "synth_postalCode()" },
+				{ "Column": "Country",       "Expression": "synth_pickWeighted(\"USA|CAN|MEX|GBR|DEU|JPN\", \"60|10|5|10|10|5\")" },
+				{ "Column": "FoundedDate",   "Expression": "synth_dateBetween(\"1950-01-01\", \"2020-12-31\")" },
+				{ "Column": "CreateDate",    "Expression": "synth_dateBetween(\"2020-01-01\", \"2024-12-31\")" },
+				{ "Column": "UpdateDate",    "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-12-31\")" },
+				{ "Column": "Deleted",       "Expression": "0" }
+			]
+		},
+
+		{
+			"Entity": "Department",
+			"Count": 250,
+			"Description": "Org-chart departments inside companies. ~5 departments per company on average via referenceTo's uniform pick.",
+			"Fields":
+			[
+				{ "Column": "IDDepartment",   "Expression": "RecordIndex + 1" },
+				{ "Column": "GUIDDepartment", "Expression": "synth_guid()" },
+				{ "Column": "Name",           "Expression": "synth_department()" },
+				{ "Column": "IDCompany",      "Expression": "synth_referenceTo(\"Company\", 50)" },
+				{ "Column": "HeadcountTarget","Expression": "synth_integer(3, 75)" },
+				{ "Column": "BudgetUSD",      "Expression": "synth_integer(50000, 5000000)" },
+				{ "Column": "CreateDate",     "Expression": "synth_dateBetween(\"2020-01-01\", \"2024-12-31\")" },
+				{ "Column": "UpdateDate",     "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-12-31\")" },
+				{ "Column": "Deleted",        "Expression": "0" }
+			]
+		},
+
+		{
+			"Entity": "User",
+			"Count": 1000,
+			"Description": "Individual users / employees. ~5% have no email (deterministic null injection for consumer-side null handling tests).",
+			"Fields":
+			[
+				{ "Column": "IDUser",       "Expression": "RecordIndex + 1" },
+				{ "Column": "GUIDUser",     "Expression": "synth_guid()" },
+				{ "Column": "FirstName",    "Expression": "synth_firstName()" },
+				{ "Column": "LastName",     "Expression": "synth_lastName()" },
+				{ "Column": "FullName",     "Expression": "CONCAT(FirstName, \" \", LastName)" },
+				{ "Column": "LoginID",      "Expression": "synth_email()" },
+				{ "Column": "Email",        "Expression": "synth_coinFlip(0.05) ? \"\" :: synth_email()" },
+				{ "Column": "Phone",        "Expression": "synth_coinFlip(0.10) ? \"\" :: synth_phone()" },
+				{ "Column": "Title",        "Expression": "synth_profession()" },
+				{ "Column": "IDCompany",    "Expression": "synth_referenceTo(\"Company\", 50)" },
+				{ "Column": "IDDepartment", "Expression": "synth_referenceTo(\"Department\", 250)" },
+				{ "Column": "TenureYears",  "Expression": "synth_integer(0, 30)" },
+				{ "Column": "AnnualSalary", "Expression": "synth_integer(35000, 250000)" },
+				{ "Column": "City",         "Expression": "synth_city()" },
+				{ "Column": "StateCode",    "Expression": "synth_stateCode()" },
+				{ "Column": "CreateDate",   "Expression": "synth_dateBetween(\"2020-01-01\", \"2024-12-31\")" },
+				{ "Column": "UpdateDate",   "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-12-31\")" },
+				{ "Column": "Deleted",      "Expression": "0" }
+			]
+		},
+
+		{
+			"Entity": "ProductCategory",
+			"Count": 30,
+			"Description": "Product taxonomy. Fixed-set picker so categories look like real industrial-supply categories rather than chance.js gibberish.",
+			"Fields":
+			[
+				{ "Column": "IDProductCategory",   "Expression": "RecordIndex + 1" },
+				{ "Column": "GUIDProductCategory", "Expression": "synth_guid()" },
+				{ "Column": "Name",                "Expression": "synth_pickone(\"Fasteners|Power Tools|Hand Tools|Adhesives|Lubricants|Safety Equipment|Electrical|Plumbing|Welding|Cutting|Measuring|Storage|Cleaning|Material Handling|Pneumatics|Hydraulics|Bearings|Gaskets|Seals|Springs|Belts|Pulleys|Motors|Pumps|Valves|Fittings|Pipes|Cable|Connectors|Test Equipment\")" },
+				{ "Column": "Tier",                "Expression": "synth_pickWeighted(\"A|B|C\", \"30|45|25\")" },
+				{ "Column": "MarginPercent",       "Expression": "synth_floating(0.08, 0.45)" },
+				{ "Column": "CreateDate",          "Expression": "synth_dateBetween(\"2020-01-01\", \"2024-12-31\")" },
+				{ "Column": "UpdateDate",          "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-12-31\")" },
+				{ "Column": "Deleted",             "Expression": "0" }
+			]
+		},
+
+		{
+			"Entity": "Product",
+			"Count": 1000,
+			"Description": "Finished SKUs sellable to customers. Manufactured by a Company; classified by a ProductCategory.",
+			"Fields":
+			[
+				{ "Column": "IDProduct",         "Expression": "RecordIndex + 1" },
+				{ "Column": "GUIDProduct",       "Expression": "synth_guid()" },
+				{ "Column": "SKU",               "Expression": "CONCAT(\"SKU-\", RecordIndex + 100000)" },
+				{ "Column": "Name",              "Expression": "CONCAT(synth_pickone(\"Pro|Industrial|Heavy-Duty|Standard|Premium|Economy|Universal|Compact|Deluxe|Classic\"), \" \", synth_pickone(\"Drill|Wrench|Saw|Hammer|Pump|Valve|Bearing|Belt|Cable|Switch|Sensor|Mount|Bracket|Coupling|Flange|Adapter|Connector|Filter|Gauge|Meter\"), \" \", synth_pickone(\"100|200|300|500|750|1000|1500|2000|3000|5000\"))" },
+				{ "Column": "IDProductCategory", "Expression": "synth_referenceTo(\"ProductCategory\", 30)" },
+				{ "Column": "IDManufacturer",    "Expression": "synth_referenceTo(\"Company\", 50)" },
+				{ "Column": "UnitPriceUSD",      "Expression": "synth_floating(2.50, 5000.00)" },
+				{ "Column": "UnitCostUSD",       "Expression": "synth_floating(1.00, 3500.00)" },
+				{ "Column": "Weight",            "Expression": "synth_floating(0.05, 250.00)" },
+				{ "Column": "WeightUnit",        "Expression": "synth_pickWeighted(\"lb|kg\", \"70|30\")" },
+				{ "Column": "InProduction",      "Expression": "synth_coinFlip(0.92)" },
+				{ "Column": "DiscontinuedDate",  "Expression": "synth_coinFlip(0.08) ? synth_dateBetween(\"2023-01-01\", \"2025-06-30\") :: \"\"" },
+				{ "Column": "CreateDate",        "Expression": "synth_dateBetween(\"2020-01-01\", \"2024-12-31\")" },
+				{ "Column": "UpdateDate",        "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-12-31\")" },
+				{ "Column": "Deleted",           "Expression": "0" }
+			]
+		},
+
+		{
+			"Entity": "Material",
+			"Count": 500,
+			"Description": "Raw materials / components consumed by manufacturing. Supplied by Companies.",
+			"Fields":
+			[
+				{ "Column": "IDMaterial",     "Expression": "RecordIndex + 1" },
+				{ "Column": "GUIDMaterial",   "Expression": "synth_guid()" },
+				{ "Column": "MaterialCode",   "Expression": "CONCAT(\"MAT-\", RecordIndex + 50000)" },
+				{ "Column": "Name",           "Expression": "CONCAT(synth_pickone(\"Steel|Aluminum|Copper|Brass|Plastic|Rubber|Composite|Titanium|Nickel|Zinc|Polymer|Fiberglass|Carbon|Stainless|Galvanized\"), \" \", synth_pickone(\"Sheet|Rod|Tube|Wire|Plate|Block|Pellet|Powder|Foil|Bar|Coil|Strip|Mesh|Filament\"))" },
+				{ "Column": "Grade",          "Expression": "synth_pickWeighted(\"Industrial|Commercial|Aerospace|Medical|Food-grade\", \"50|30|10|5|5\")" },
+				{ "Column": "IDSupplier",     "Expression": "synth_referenceTo(\"Company\", 50)" },
+				{ "Column": "UnitCostUSD",    "Expression": "synth_floating(0.25, 800.00)" },
+				{ "Column": "Unit",           "Expression": "synth_pickWeighted(\"each|lb|kg|m|ft|gal|L\", \"15|20|15|15|15|10|10\")" },
+				{ "Column": "LeadTimeDays",   "Expression": "synth_integer(1, 90)" },
+				{ "Column": "MinOrderQty",    "Expression": "synth_integer(1, 500)" },
+				{ "Column": "CreateDate",     "Expression": "synth_dateBetween(\"2020-01-01\", \"2024-12-31\")" },
+				{ "Column": "UpdateDate",     "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-12-31\")" },
+				{ "Column": "Deleted",        "Expression": "0" }
+			]
+		},
+
+		{
+			"Entity": "Warehouse",
+			"Count": 25,
+			"Description": "Physical locations holding stock. Owned by a Company.",
+			"Fields":
+			[
+				{ "Column": "IDWarehouse",   "Expression": "RecordIndex + 1" },
+				{ "Column": "GUIDWarehouse", "Expression": "synth_guid()" },
+				{ "Column": "Code",          "Expression": "CONCAT(\"WH-\", RecordIndex + 1000)" },
+				{ "Column": "Name",          "Expression": "CONCAT(synth_city(), \" Distribution Center\")" },
+				{ "Column": "IDCompany",     "Expression": "synth_referenceTo(\"Company\", 50)" },
+				{ "Column": "City",          "Expression": "synth_city()" },
+				{ "Column": "StateCode",     "Expression": "synth_stateCode()" },
+				{ "Column": "PostalCode",    "Expression": "synth_postalCode()" },
+				{ "Column": "SquareFootage", "Expression": "synth_integer(20000, 500000)" },
+				{ "Column": "BinCount",      "Expression": "synth_integer(500, 12000)" },
+				{ "Column": "OpenedDate",    "Expression": "synth_dateBetween(\"1980-01-01\", \"2022-12-31\")" },
+				{ "Column": "CreateDate",    "Expression": "synth_dateBetween(\"2020-01-01\", \"2024-12-31\")" },
+				{ "Column": "UpdateDate",    "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-12-31\")" },
+				{ "Column": "Deleted",       "Expression": "0" }
+			]
+		},
+
+		{
+			"Entity": "InventoryLot",
+			"Count": 5000,
+			"Description": "Current finished-goods stock. ~5% deterministically zero-quantity (write-down/expired scenarios).",
+			"Fields":
+			[
+				{ "Column": "IDInventoryLot",   "Expression": "RecordIndex + 1" },
+				{ "Column": "GUIDInventoryLot", "Expression": "synth_guid()" },
+				{ "Column": "LotNumber",        "Expression": "CONCAT(\"LOT-\", RecordIndex + 200000)" },
+				{ "Column": "IDProduct",        "Expression": "synth_referenceTo(\"Product\", 1000)" },
+				{ "Column": "IDWarehouse",      "Expression": "synth_referenceTo(\"Warehouse\", 25)" },
+				{ "Column": "QuantityOnHand",   "Expression": "synth_coinFlip(0.05) ? 0 :: synth_integer(1, 2500)" },
+				{ "Column": "QuantityReserved", "Expression": "synth_integer(0, 100)" },
+				{ "Column": "BinLocation",      "Expression": "CONCAT(synth_pickone(\"A|B|C|D|E|F|G|H\"), \"-\", synth_integer(1, 99), \"-\", synth_integer(1, 20))" },
+				{ "Column": "ReceivedDate",     "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-10-31\")" },
+				{ "Column": "ExpirationDate",   "Expression": "synth_coinFlip(0.30) ? synth_dateBetween(\"2025-11-01\", \"2027-12-31\") :: \"\"" },
+				{ "Column": "CreateDate",       "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-10-31\")" },
+				{ "Column": "UpdateDate",       "Expression": "synth_dateBetween(\"2025-01-01\", \"2025-12-31\")" },
+				{ "Column": "Deleted",          "Expression": "0" }
+			]
+		},
+
+		{
+			"Entity": "MaterialLot",
+			"Count": 1500,
+			"Description": "Current raw-material stock per warehouse.",
+			"Fields":
+			[
+				{ "Column": "IDMaterialLot",   "Expression": "RecordIndex + 1" },
+				{ "Column": "GUIDMaterialLot", "Expression": "synth_guid()" },
+				{ "Column": "LotNumber",       "Expression": "CONCAT(\"MLOT-\", RecordIndex + 300000)" },
+				{ "Column": "IDMaterial",      "Expression": "synth_referenceTo(\"Material\", 500)" },
+				{ "Column": "IDWarehouse",     "Expression": "synth_referenceTo(\"Warehouse\", 25)" },
+				{ "Column": "QuantityOnHand",  "Expression": "synth_floating(0.5, 10000.0)" },
+				{ "Column": "Unit",            "Expression": "synth_pickone(\"each|lb|kg|m|ft|gal|L\")" },
+				{ "Column": "ReceivedDate",    "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-10-31\")" },
+				{ "Column": "CreateDate",      "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-10-31\")" },
+				{ "Column": "UpdateDate",      "Expression": "synth_dateBetween(\"2025-01-01\", \"2025-12-31\")" },
+				{ "Column": "Deleted",         "Expression": "0" }
+			]
+		},
+
+		{
+			"Entity": "Customer",
+			"Count": 1500,
+			"Description": "Buyers placing sales orders. ~5% deterministically nullable email.",
+			"Fields":
+			[
+				{ "Column": "IDCustomer",     "Expression": "RecordIndex + 1" },
+				{ "Column": "GUIDCustomer",   "Expression": "synth_guid()" },
+				{ "Column": "AccountNumber",  "Expression": "CONCAT(\"ACCT-\", RecordIndex + 700000)" },
+				{ "Column": "CompanyName",    "Expression": "synth_company()" },
+				{ "Column": "ContactFirst",   "Expression": "synth_firstName()" },
+				{ "Column": "ContactLast",    "Expression": "synth_lastName()" },
+				{ "Column": "ContactEmail",   "Expression": "synth_coinFlip(0.05) ? \"\" :: synth_email()" },
+				{ "Column": "ContactPhone",   "Expression": "synth_phone()" },
+				{ "Column": "BillingCity",    "Expression": "synth_city()" },
+				{ "Column": "BillingState",   "Expression": "synth_stateCode()" },
+				{ "Column": "BillingPostal",  "Expression": "synth_postalCode()" },
+				{ "Column": "PaymentTerms",   "Expression": "synth_pickWeighted(\"NET30|NET45|NET60|COD|PREPAID\", \"55|20|10|10|5\")" },
+				{ "Column": "CreditLimitUSD", "Expression": "synth_integer(1000, 500000)" },
+				{ "Column": "CustomerSince",  "Expression": "synth_dateBetween(\"2010-01-01\", \"2024-12-31\")" },
+				{ "Column": "CreateDate",     "Expression": "synth_dateBetween(\"2020-01-01\", \"2024-12-31\")" },
+				{ "Column": "UpdateDate",     "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-12-31\")" },
+				{ "Column": "Deleted",        "Expression": "0" }
+			]
+		},
+
+		{
+			"Entity": "SalesOrder",
+			"Count": 5000,
+			"Description": "Sales-order headers placed by Customers and handled by a sales-rep User.",
+			"Fields":
+			[
+				{ "Column": "IDSalesOrder",   "Expression": "RecordIndex + 1" },
+				{ "Column": "GUIDSalesOrder", "Expression": "synth_guid()" },
+				{ "Column": "OrderNumber",    "Expression": "CONCAT(\"SO-\", RecordIndex + 1000000)" },
+				{ "Column": "IDCustomer",     "Expression": "synth_referenceTo(\"Customer\", 1500)" },
+				{ "Column": "IDSalesRep",     "Expression": "synth_referenceTo(\"User\", 1000)" },
+				{ "Column": "OrderDate",      "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-10-31\")" },
+				{ "Column": "ShipDate",       "Expression": "synth_dateBetween(\"2024-01-05\", \"2025-11-15\")" },
+				{ "Column": "Status",         "Expression": "synth_pickWeighted(\"Draft|Confirmed|Shipped|Delivered|Cancelled|Returned\", \"5|15|25|45|7|3\")" },
+				{ "Column": "TotalUSD",       "Expression": "synth_floating(50.00, 75000.00)" },
+				{ "Column": "ShippingUSD",    "Expression": "synth_floating(0.00, 850.00)" },
+				{ "Column": "TaxUSD",         "Expression": "synth_floating(0.00, 6000.00)" },
+				{ "Column": "Channel",        "Expression": "synth_pickWeighted(\"Web|Phone|Field|Partner|EDI\", \"35|25|15|15|10\")" },
+				{ "Column": "CreateDate",     "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-10-31\")" },
+				{ "Column": "UpdateDate",     "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-12-31\")" },
+				{ "Column": "Deleted",        "Expression": "0" }
+			]
+		},
+
+		{
+			"Entity": "SalesOrderLine",
+			"Count": 25000,
+			"Description": "Sales-order line items. ~1% deliberately reference a non-existent product (orphan FK) so consumers can verify their join logic doesn't throw.",
+			"Fields":
+			[
+				{ "Column": "IDSalesOrderLine",   "Expression": "RecordIndex + 1" },
+				{ "Column": "GUIDSalesOrderLine", "Expression": "synth_guid()" },
+				{ "Column": "IDSalesOrder",       "Expression": "synth_referenceTo(\"SalesOrder\", 5000)" },
+				{ "Column": "IDProduct",          "Expression": "synth_coinFlip(0.01) ? synth_integer(50000, 99999) :: synth_referenceTo(\"Product\", 1000)" },
+				{ "Column": "LineNumber",         "Expression": "synth_integer(1, 25)" },
+				{ "Column": "Quantity",           "Expression": "synth_integer(1, 250)" },
+				{ "Column": "UnitPriceUSD",       "Expression": "synth_floating(1.50, 4500.00)" },
+				{ "Column": "DiscountPercent",    "Expression": "synth_pickWeighted(\"0|5|10|15|25\", \"60|15|15|7|3\")" },
+				{ "Column": "ExtendedUSD",        "Expression": "synth_floating(1.50, 50000.00)" },
+				{ "Column": "CreateDate",         "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-10-31\")" },
+				{ "Column": "UpdateDate",         "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-12-31\")" },
+				{ "Column": "Deleted",            "Expression": "0" }
+			]
+		},
+
+		{
+			"Entity": "WorkOrder",
+			"Count": 1000,
+			"Description": "Manufacturing work orders that produce Products at Warehouses.",
+			"Fields":
+			[
+				{ "Column": "IDWorkOrder",     "Expression": "RecordIndex + 1" },
+				{ "Column": "GUIDWorkOrder",   "Expression": "synth_guid()" },
+				{ "Column": "WorkOrderNumber", "Expression": "CONCAT(\"WO-\", RecordIndex + 800000)" },
+				{ "Column": "IDProduct",       "Expression": "synth_referenceTo(\"Product\", 1000)" },
+				{ "Column": "IDWarehouse",     "Expression": "synth_referenceTo(\"Warehouse\", 25)" },
+				{ "Column": "QuantityPlanned", "Expression": "synth_integer(10, 5000)" },
+				{ "Column": "QuantityProduced","Expression": "synth_integer(0, 5000)" },
+				{ "Column": "Status",          "Expression": "synth_pickWeighted(\"Planned|Released|InProgress|Completed|OnHold|Cancelled\", \"15|15|20|40|7|3\")" },
+				{ "Column": "PlannedStart",    "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-12-31\")" },
+				{ "Column": "ActualStart",     "Expression": "synth_coinFlip(0.85) ? synth_dateBetween(\"2024-01-05\", \"2025-12-15\") :: \"\"" },
+				{ "Column": "CompletedDate",   "Expression": "synth_coinFlip(0.40) ? synth_dateBetween(\"2024-01-10\", \"2025-12-20\") :: \"\"" },
+				{ "Column": "CreateDate",      "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-10-31\")" },
+				{ "Column": "UpdateDate",      "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-12-31\")" },
+				{ "Column": "Deleted",         "Expression": "0" }
+			]
+		},
+
+		{
+			"Entity": "MaterialConsumption",
+			"Count": 5000,
+			"Description": "Materials consumed by WorkOrders. The grain is one row per (work order, material) usage event.",
+			"Fields":
+			[
+				{ "Column": "IDMaterialConsumption",   "Expression": "RecordIndex + 1" },
+				{ "Column": "GUIDMaterialConsumption", "Expression": "synth_guid()" },
+				{ "Column": "IDWorkOrder",             "Expression": "synth_referenceTo(\"WorkOrder\", 1000)" },
+				{ "Column": "IDMaterial",              "Expression": "synth_referenceTo(\"Material\", 500)" },
+				{ "Column": "QuantityConsumed",        "Expression": "synth_floating(0.10, 1500.00)" },
+				{ "Column": "Unit",                    "Expression": "synth_pickone(\"each|lb|kg|m|ft|gal|L\")" },
+				{ "Column": "CostUSD",                 "Expression": "synth_floating(0.50, 8000.00)" },
+				{ "Column": "ConsumptionDate",         "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-11-30\")" },
+				{ "Column": "ScrapPercent",            "Expression": "synth_pickWeighted(\"0|1|2|5|10\", \"55|20|15|7|3\")" },
+				{ "Column": "CreateDate",              "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-10-31\")" },
+				{ "Column": "UpdateDate",              "Expression": "synth_dateBetween(\"2024-01-01\", \"2025-12-31\")" },
+				{ "Column": "Deleted",                 "Expression": "0" }
+			]
+		}
+	]
+}

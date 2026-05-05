@@ -1,0 +1,43 @@
+{
+	"Name": "customers-demo-v1",
+	"GlobalSeed": "customers-demo-v1",
+	"Description": "Tiny two-entity demo spec used for smoke-testing the synth beacon's meadow-shape REST surface.",
+	"Entities":
+	[
+		{
+			"Entity": "Company",
+			"Count": 25,
+			"Fields":
+			[
+				{ "Column": "IDCompany",     "Expression": "RecordIndex + 1" },
+				{ "Column": "GUIDCompany",   "Expression": "synth_guid()" },
+				{ "Column": "Name",          "Expression": "synth_company()" },
+				{ "Column": "City",          "Expression": "synth_city()" },
+				{ "Column": "StateCode",     "Expression": "synth_stateCode()" },
+				{ "Column": "PostalCode",    "Expression": "synth_postalCode()" },
+				{ "Column": "EmployeeCount", "Expression": "synth_integer(10, 5000)" },
+				{ "Column": "Industry",      "Expression": "synth_pickWeighted(\"Manufacturing|Distribution|Services|Retail\", \"40|30|20|10\")" },
+				{ "Column": "FoundedDate",   "Expression": "synth_dateBetween(\"1970-01-01\", \"2020-12-31\")" }
+			]
+		},
+		{
+			"Entity": "Customer",
+			"Count": 100,
+			"Fields":
+			[
+				{ "Column": "IDCustomer",   "Expression": "RecordIndex + 1" },
+				{ "Column": "GUIDCustomer", "Expression": "synth_guid()" },
+				{ "Column": "FirstName",    "Expression": "synth_firstName()" },
+				{ "Column": "LastName",     "Expression": "synth_lastName()" },
+				{ "Column": "FullName",     "Expression": "CONCAT(FirstName, \" \", LastName)" },
+				{ "Column": "Email",        "Expression": "synth_coinFlip(0.05) ? \"\" :: synth_email()" },
+				{ "Column": "Phone",        "Expression": "synth_phone()" },
+				{ "Column": "City",         "Expression": "synth_city()" },
+				{ "Column": "StateCode",    "Expression": "synth_stateCode()" },
+				{ "Column": "IDCompany",    "Expression": "synth_referenceTo(\"Company\", 25)" },
+				{ "Column": "TenureYears",  "Expression": "synth_integer(0, 25)" },
+				{ "Column": "CreatedDate",  "Expression": "synth_dateBetween(\"2020-01-01\", \"2025-12-31\")" }
+			]
+		}
+	]
+}
