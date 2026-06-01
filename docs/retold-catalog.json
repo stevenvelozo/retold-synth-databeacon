@@ -1,5 +1,5 @@
 {
-	"Generated": "2026-05-30T22:31:47.484Z",
+	"Generated": "2026-06-01T03:51:18.914Z",
 	"Mode": "module",
 	"GitHubOrg": "fable-retold",
 	"DefaultBranch": "master",
@@ -63,11 +63,16 @@
 			}
 		],
 		"DocFiles": [
+			".nojekyll",
 			"README.md",
 			"_cover.md",
 			"_sidebar.md",
+			"_version.json",
 			"architecture.md",
+			"index.html",
 			"quickstart.md",
+			"retold-catalog.json",
+			"retold-keyword-index.json",
 			"specs.md"
 		]
 	},
